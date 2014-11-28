@@ -1,0 +1,13 @@
+image: go1.3
+git:
+  path: github.com/rkusa/assert
+env:
+  - GOROOT=/usr/local/go
+  - PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+script:
+  - make deps
+  - make test
+notify:
+  email:
+    recipients:
+      - m+assert@rkusa.st

@@ -1,7 +1,5 @@
 // Simplified error handling for http routes using assert with status code.
 //
-//  package main
-//
 //  func Login(ctx web.Context) {
 //    username := ctx.FormValue("email")
 //    password := ctx.FormValue("password")
@@ -83,7 +81,7 @@ func Success(err error, statusCode int, message string) {
 	}
 }
 
-// Error throws and responses with a 500 Internal Server Error if the provided
+// Error throws and responds with an 500 Internal Server Error if the provided
 // error exists.
 func Error(err error) {
 	if err != nil {
@@ -91,8 +89,8 @@ func Error(err error) {
 	}
 }
 
-// Assert represents an encapsulation for the assertions to allow to register
-// a custom OnError callback.
+// Assert represents an encapsulation for the assertions to provide an OnError
+// hook.
 type Assert interface {
 	OnError(func())
 	OK(bool, int, string)
@@ -134,7 +132,7 @@ func (a *assertEncapsulation) Success(err error, statusCode int, message string)
 	}
 }
 
-// Error throws and responses with a 500 Internal Server Error if the provided
+// Error throws and responds with an 500 Internal Server Error if the provided
 // error exists.
 func (a *assertEncapsulation) Error(err error) {
 	if err != nil {
