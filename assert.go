@@ -23,6 +23,7 @@
 package assert
 
 import (
+	"fmt"
 	"net/http"
 	"runtime"
 	"strings"
@@ -52,13 +53,13 @@ func (err assertError) stack() string {
 	return strings.Join(lines, "\n")
 }
 
-func ok(condition bool, statusCode int, message string) error {
+func ok(condition bool, statusCode int, message string, args ...interface{}) error {
 	if !condition {
 		if len(message) == 0 {
 			message = http.StatusText(statusCode)
 		}
 
-		return assertError{statusCode, message}
+		return assertError{statusCode, fmt.Sprintf(message, args...)}
 	}
 
 	return nil
@@ -67,16 +68,16 @@ func ok(condition bool, statusCode int, message string) error {
 // Success throws with the given statusCode and message if the provided
 // condition evaluates to false. If message is an empty string, the default
 // status description is used.
-func OK(condition bool, statusCode int, message string) {
-	if err := ok(condition, statusCode, message); err != nil {
+func OK(condition bool, statusCode int, message string, args ...interface{}) {
+	if err := ok(condition, statusCode, message, args...); err != nil {
 		panic(err)
 	}
 }
 
 // Success throws with the given statusCode and message if the provided error
 // exists. If message is an empty string, the default status description is used.
-func Success(err error, statusCode int, message string) {
-	if e := ok(err == nil, statusCode, message); e != nil {
+func Success(err error, statusCode int, message string, args ...interface{}) {
+	if e := ok(err == nil, statusCode, message, args...); e != nil {
 		panic(e)
 	}
 }
@@ -89,12 +90,18 @@ func Error(err error) {
 	}
 }
 
+// Build and directly throw an error using the provided status code and message.
+func Throw(statusCode int, message string, args ...interface{}) {
+	OK(false, statusCode, message, args...)
+}
+
 // Assert represents an encapsulation for the assertions to provide an OnError
 // hook.
 type Assert interface {
 	OnError(func())
-	OK(bool, int, string)
-	Success(error, int, string)
+	OK(bool, int, string, ...interface{})
+	Success(error, int, string, ...interface{})
+	Throw(int, string, ...interface{})
 	Error(error)
 }
 
@@ -118,16 +125,16 @@ func (a *assertEncapsulation) OnError(fn func()) {
 // Success throws with the given statusCode and message if the provided
 // condition evaluates to false. If message is an empty string, the default
 // status description is used.
-func (a *assertEncapsulation) OK(condition bool, statusCode int, message string) {
-	if err := ok(condition, statusCode, message); err != nil {
+func (a *assertEncapsulation) OK(condition bool, statusCode int, message string, args ...interface{}) {
+	if err := ok(condition, statusCode, message, args...); err != nil {
 		a.throw(err)
 	}
 }
 
 // Success throws with the given statusCode and message if the provided error
 // exists. If message is an empty string, the default status description is used.
-func (a *assertEncapsulation) Success(err error, statusCode int, message string) {
-	if e := ok(err == nil, statusCode, message); e != nil {
+func (a *assertEncapsulation) Success(err error, statusCode int, message string, args ...interface{}) {
+	if e := ok(err == nil, statusCode, message, args...); e != nil {
 		a.throw(e)
 	}
 }
@@ -138,6 +145,11 @@ func (a *assertEncapsulation) Error(err error) {
 	if err != nil {
 		a.throw(ok(false, http.StatusInternalServerError, err.Error()))
 	}
+}
+
+// Build and directly throw an error using the provided status code and message.
+func (a *assertEncapsulation) Throw(statusCode int, message string, args ...interface{}) {
+	a.OK(false, statusCode, message, args...)
 }
 
 // Create a new assertion encapsulation.

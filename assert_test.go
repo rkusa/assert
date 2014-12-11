@@ -114,6 +114,21 @@ func TestError(t *testing.T) {
 	}()
 }
 
+func TestThrow(t *testing.T) {
+	func() {
+		defer func() {
+			err, ok := recover().(error)
+			assert.True(t, ok)
+
+			if assert.Error(t, err) {
+				assert.Equal(t, err.Error(), "Invalid input")
+			}
+		}()
+
+		Throw(http.StatusBadRequest, "Invalid input")
+	}()
+}
+
 func TestOnError(t *testing.T) {
 	called := false
 	defer func() {
